@@ -1,0 +1,47 @@
+/environmental_data
+This is Vegetation data from the National Land Cover Database (NLCD). A raster (.tif) of land cover classification across the U.S.
+ - /Annual_NLCD_LndCov_2024_CU_C1V1
+    - Annual_NLCD_LndCov_2024_CU_C1V1.tif.aux.xml
+    - Annual_NLCD_LndCov_2024_CU_C1V1.xml
+    - Annual_NLCD_LndCov_2024_CU_C1V1.tif
+
+The following folders are from the GridMET dataset derived from PRISM + NLDAS climate data
+burning index
+ - /bi
+    - bi_1990.nc to bi_2025.nc
+Energy Release Component (possible fire intensity)
+ - /erc
+    - erc_1990.nc to erc_2025.nc
+precipitation
+ - /pr
+     - pr_1990.nc to pr_2025.nc
+minimum relative humidity
+ - /rmin
+     - rmin_1990.nc to rmin_2025.nc
+maximum temperature
+ - /tmmx
+     - tmmx_1990.nc to tmmx_2025.nc
+wind speed
+ - /vs
+     - vs_1990.nc to vs_2025.nc
+California Fuels Data: https://landfire.gov/data/FullExtentDownloads?field_version_target_id=All&field_theme_target_id=All&field_region_id_target_id=4, 40 Scott and Burgan Fire Behavior Fuel Models 2020 - FBFM40
+ - /CONUS
+Building/Structure Data in California: https://raw.githubusercontent.com/Microsoft/USBuildingFootprints/master/README.md (wget from the california link)
+ - /buildings
+    -
+Topographical Data: USGS 3DEP DEM 1/3
+ - /topo
+    - USGS_13_n33w115_20241016.tif
+    - USGS_13_n33w116_20240327.tif
+    etc
+ - /fire_incidents
+    - 2014-2024 fire ignition reports from PG&E, SCE, and SDGE. Note that a couple years (2020-2021) are heavily inflated with false positives to prevent lawsuits
+ - frap.gbd
+    - california fire data
+
+
+
+
+
+
+

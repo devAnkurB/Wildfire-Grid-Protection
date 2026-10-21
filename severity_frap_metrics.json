@@ -1,0 +1,592 @@
+{
+  "claim_scope": "Results represent expected-loss-ranked risk prioritization under public-data assumptions and literature-derived intervention effect sizes. Dollar figures are modeled estimates, not causal predictions of actual savings. Uncertainty bounds reflect sampling variability in the cluster-level EAL distribution.",
+  "methodology": {
+    "risk_decomposition": "ExpectedLoss(s,t)=P_ignition(s,t)*E(Loss|ignition,s,t)",
+    "policy_sequence": [
+      "Apply fast-trip baseline to all HFTD clusters",
+      "Compute residual EAL after fast-trip",
+      "Escalate to covered conductor for high residual EAL",
+      "Reserve undergrounding for extreme residual EAL + high structure density",
+      "Use vegetation management in vegetated-fuel moderate residual EAL clusters"
+    ],
+    "severity_model": {
+      "type": "empirical_frap_lookup",
+      "description": "Static cluster-level lookup from FRAP (1992-2024) stratified by HFTD tier and LANDFIRE fuel category.",
+      "large_fire_threshold_ac": 10.0,
+      "combination": "E(area|ign,s)=P_large(s)*E_area_large(s)+(1-P_large(s))*E_area_small(s)",
+      "stratification": [
+        "hftd_tier",
+        "fuel_category"
+      ],
+      "min_events_per_stratum": 30,
+      "backfill_order": [
+        "hftd_tier",
+        "statewide"
+      ],
+      "frap_filters": {
+        "year_min": 1992,
+        "year_max": 2024,
+        "min_acres": 10.0,
+        "all_causes_used": true
+      },
+      "frap_lookup_summary": {
+        "n_fires_used_total": 8285,
+        "n_lookup_rows": 19,
+        "n_direct_hftd_fuel": 17,
+        "n_backfill_hftd_only": 2,
+        "n_backfill_statewide": 0,
+        "statewide_defaults": {
+          "p_large": 1.0,
+          "e_area_large": 2984.2265625,
+          "e_area_small": 3.5817153453826904,
+          "n_fires": 8285
+        }
+      }
+    },
+    "wildfire_plausibility_gate": {
+      "rule": "If fuel_category == nonburnable, force P_large=0, E_area_large=0, E_area_small=2.0 acres.",
+      "physical_basis": "FBFM40 nonburnable classes (urban/water/barren) do not support meaningful wildland spread."
+    },
+    "loss_mapping": {
+      "acres_to_sqmi": "acres/640",
+      "expected_structures_impacted": "structures_per_sqmi * sqmi * exposure_multiplier",
+      "damage_per_structure_usd": 500000.0,
+      "exposure_multiplier": 1.0
+    },
+    "annual_loss_methods": {
+      "primary": "sum_over_days_of_expected_daily_loss",
+      "secondary": "annualized_prob_formula_1_minus_(1-mean_daily_p)^365_times_mean_loss_given_ign"
+    },
+    "counterfactual_effectiveness": {
+      "undergrounding": {
+        "r_freq": {
+          "low": 0.5,
+          "mid": 1.0,
+          "high": 1.0
+        },
+        "r_tail": {
+          "low": 0.0,
+          "mid": 0.0,
+          "high": 0.0
+        },
+        "r_spread": {
+          "low": 0.0,
+          "mid": 0.0,
+          "high": 0.0
+        }
+      },
+      "covered_conductor": {
+        "r_freq": {
+          "low": 0.31,
+          "mid": 0.62,
+          "high": 0.713
+        },
+        "r_tail": {
+          "low": 0.0,
+          "mid": 0.05,
+          "high": 0.1
+        },
+        "r_spread": {
+          "low": 0.0,
+          "mid": 0.0,
+          "high": 0.05
+        }
+      },
+      "fast_trip_and_hardening": {
+        "r_freq": {
+          "low": 0.36,
+          "mid": 0.72,
+          "high": 0.828
+        },
+        "r_tail": {
+          "low": 0.0,
+          "mid": 0.0,
+          "high": 0.05
+        },
+        "r_spread": {
+          "low": 0.0,
+          "mid": 0.0,
+          "high": 0.05
+        }
+      },
+      "vegetation_management": {
+        "r_freq": {
+          "low": 0.285,
+          "mid": 0.57,
+          "high": 0.6554999999999999
+        },
+        "r_tail": {
+          "low": 0.1,
+          "mid": 0.2,
+          "high": 0.3
+        },
+        "r_spread": {
+          "low": 0.1,
+          "mid": 0.2,
+          "high": 0.35
+        }
+      },
+      "targeted_monitoring": {
+        "r_freq": {
+          "low": 0.0,
+          "mid": 0.0,
+          "high": 0.0
+        },
+        "r_tail": {
+          "low": 0.05,
+          "mid": 0.1,
+          "high": 0.2
+        },
+        "r_spread": {
+          "low": 0.05,
+          "mid": 0.1,
+          "high": 0.2
+        }
+      }
+    },
+    "counterfactual_effectiveness_source": "Warner et al. 2025, Nature Climate Change (Table 3)",
+    "effectiveness_anchors": {
+      "fast_trip_r_freq_mid": 0.72,
+      "vegetation_management_r_freq_mid": 0.57,
+      "covered_conductor_r_freq_mid": 0.62,
+      "undergrounding_r_freq_mid": 1.0,
+      "notes": "LOW=50% of Warner point estimate; MID=Warner point estimate; HIGH=115% capped at 1.0.",
+      "source": "Warner et al. 2025, Nature Climate Change (Table 3)",
+      "fuel_treatment_tail_spread_reference": "USFS fuel-treatment severity/spread literature synthesis"
+    },
+    "recommendation_thresholds": {
+      "undergrounding_eal_usd": 2600000.0,
+      "covered_conductor_eal_usd": 1000000.0,
+      "hardening_eal_usd": 1000000.0,
+      "vegetation_eal_usd": 200000.0,
+      "high_density_sqmi": 500.0
+    },
+    "vegetation_applicability": {
+      "rule_nonburnable_no_vegetation_recommendation": true,
+      "veg_factor_by_fuel_category": {
+        "timber_litter": 1.0,
+        "timber_understory": 1.0,
+        "shrub": 1.0,
+        "grass_shrub": 1.0,
+        "slash": 1.0,
+        "grass": 0.5,
+        "nonburnable": 0.0,
+        "unknown": 0.5
+      }
+    },
+    "cost_assumptions": {
+      "cost_basis_used": "cpuc_public_2025",
+      "cost_basis_source": "CPUC Rule 20 FAQ (public unit-cost examples for electric line undergrounding vs alternatives)",
+      "cost_basis_source_url": "https://www.cpuc.ca.gov/industries-and-topics/electrical-energy/infrastructure/electric-rules/rule-20-overview/rule-20-faqs",
+      "capital_discount_rate": 0.07,
+      "capital_lifetime_years": 30,
+      "cost_ranges": {
+        "undergrounding": {
+          "capex_per_mile": {
+            "low": 2250000.0,
+            "mid": 3000000.0,
+            "high": 4500000.0
+          },
+          "annual_opex_per_mile": {
+            "low": 10000.0,
+            "mid": 20000.0,
+            "high": 40000.0
+          }
+        },
+        "covered_conductor": {
+          "capex_per_mile": {
+            "low": 400000.0,
+            "mid": 480000.0,
+            "high": 700000.0
+          },
+          "annual_opex_per_mile": {
+            "low": 15000.0,
+            "mid": 30000.0,
+            "high": 60000.0
+          }
+        },
+        "fast_trip_and_hardening": {
+          "capex_per_mile": {
+            "low": 200000.0,
+            "mid": 300000.0,
+            "high": 450000.0
+          },
+          "annual_opex_per_mile": {
+            "low": 10000.0,
+            "mid": 20000.0,
+            "high": 40000.0
+          }
+        },
+        "vegetation_management": {
+          "capex_per_mile": {
+            "low": 0.0,
+            "mid": 0.0,
+            "high": 0.0
+          },
+          "annual_opex_per_mile": {
+            "low": 20000.0,
+            "mid": 40000.0,
+            "high": 80000.0
+          }
+        },
+        "targeted_monitoring": {
+          "capex_per_mile": {
+            "low": 0.0,
+            "mid": 0.0,
+            "high": 0.0
+          },
+          "annual_opex_per_mile": {
+            "low": 5000.0,
+            "mid": 15000.0,
+            "high": 40000.0
+          }
+        }
+      },
+      "treated_miles_proxy": {
+        "method": "scenario_fixed_miles_per_cluster",
+        "values": {
+          "low": 1.0,
+          "mid": 2.0,
+          "high": 5.0
+        },
+        "note": "Physically grounded sensitivity values replacing transmission-length floor-clipped proxy. LOW=targeted short segment, MID=moderate feeder segment, HIGH=broader multi-segment treatment."
+      }
+    }
+  },
+  "detected_inputs": {
+    "panel_path": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/panel_full.csv",
+    "incidents_path": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/fire_incidents/incidents_features.csv",
+    "structures_path": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/structures_by_cluster.csv",
+    "panel_shape": [
+      4018000,
+      37
+    ],
+    "incidents_shape": [
+      3699,
+      41
+    ],
+    "structures_shape": [
+      1000,
+      2
+    ],
+    "panel_key_cols": [
+      "cluster_id",
+      "date",
+      "year",
+      "p_ignition_cal"
+    ],
+    "incidents_key_cols": [
+      "date",
+      "year",
+      "confirmed_ignition",
+      "fire_size_bucket",
+      "fire_size"
+    ],
+    "structures_key_cols": [
+      "cluster_id",
+      "structures_per_sqmi"
+    ]
+  },
+  "frap_source": {
+    "source": {
+      "type": "gdb",
+      "path": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/loss_function_data/frap.gbd/a1ca0214-dcc1-45cb-8ecb-6620ab2f2c02.gdb",
+      "layer": "California_Fire_Perimeters__all_"
+    },
+    "use_all_causes": true,
+    "year_min": 1992,
+    "year_max": 2024,
+    "min_acres_filter": 10.0,
+    "n_fires_after_filters": 8285,
+    "e_area_small_empirical_pre_filter": 3.5817153453826904
+  },
+  "frap_lookup_table_head": [
+    {
+      "hftd_tier": "non_hftd",
+      "fuel_category": "grass",
+      "p_large": 1.0,
+      "e_area_large": 4042.6201171875,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 1041,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "non_hftd",
+      "fuel_category": "grass_shrub",
+      "p_large": 1.0,
+      "e_area_large": 1707.21533203125,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 594,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "non_hftd",
+      "fuel_category": "nonburnable",
+      "p_large": 1.0,
+      "e_area_large": 1738.1312255859375,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 2161,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "non_hftd",
+      "fuel_category": "shrub",
+      "p_large": 1.0,
+      "e_area_large": 1715.906494140625,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 165,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "non_hftd",
+      "fuel_category": "timber_litter",
+      "p_large": 1.0,
+      "e_area_large": 1049.994873046875,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 52,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "non_hftd",
+      "fuel_category": "timber_understory",
+      "p_large": 1.0,
+      "e_area_large": 279.533203125,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 31,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_2",
+      "fuel_category": "grass",
+      "p_large": 1.0,
+      "e_area_large": 1893.1839599609375,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 679,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_2",
+      "fuel_category": "grass_shrub",
+      "p_large": 1.0,
+      "e_area_large": 4688.01220703125,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 270,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_2",
+      "fuel_category": "nonburnable",
+      "p_large": 1.0,
+      "e_area_large": 3516.4697265625,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 750,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_2",
+      "fuel_category": "shrub",
+      "p_large": 1.0,
+      "e_area_large": 3678.07666015625,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 228,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_2",
+      "fuel_category": "slash",
+      "p_large": 1.0,
+      "e_area_large": 3673.10546875,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 4,
+      "backfill_level": "hftd_only"
+    },
+    {
+      "hftd_tier": "tier_2",
+      "fuel_category": "timber_litter",
+      "p_large": 1.0,
+      "e_area_large": 6254.79736328125,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 276,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_2",
+      "fuel_category": "timber_understory",
+      "p_large": 1.0,
+      "e_area_large": 4430.50146484375,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 465,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_3",
+      "fuel_category": "grass",
+      "p_large": 1.0,
+      "e_area_large": 3769.58935546875,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 36,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_3",
+      "fuel_category": "grass_shrub",
+      "p_large": 1.0,
+      "e_area_large": 3689.98876953125,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 578,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_3",
+      "fuel_category": "nonburnable",
+      "p_large": 1.0,
+      "e_area_large": 2999.46435546875,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 750,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_3",
+      "fuel_category": "shrub",
+      "p_large": 1.0,
+      "e_area_large": 3559.487548828125,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 20,
+      "backfill_level": "hftd_only"
+    },
+    {
+      "hftd_tier": "tier_3",
+      "fuel_category": "timber_litter",
+      "p_large": 1.0,
+      "e_area_large": 715.0418701171875,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 80,
+      "backfill_level": "hftd_fuel"
+    },
+    {
+      "hftd_tier": "tier_3",
+      "fuel_category": "timber_understory",
+      "p_large": 1.0,
+      "e_area_large": 8680.064453125,
+      "e_area_small": 3.5817153453826904,
+      "n_fires": 105,
+      "backfill_level": "hftd_fuel"
+    }
+  ],
+  "model_evaluation_test_2024": {
+    "severity_model_type": "empirical_frap_lookup",
+    "n_events_test_2024": 391,
+    "n_large_test_2024": 391,
+    "classifier_auc_test_2024": null,
+    "classifier_pr_auc_test_2024": null
+  },
+  "portfolio_totals_usd_sum_daily_primary": {
+    "base": 27133074830.07292,
+    "cf_low": 16175653431.977442,
+    "cf_mid": 8993020233.093044,
+    "cf_high": 6760078399.749678,
+    "delta_low": 10957421398.09548,
+    "delta_mid": 18140054596.979877,
+    "delta_high": 20372996430.323242
+  },
+  "portfolio_totals_usd_annualized_secondary": {
+    "base": 21717089575.482944,
+    "cf_low": 13769396924.133514,
+    "cf_mid": 7783544990.711271,
+    "cf_high": 5865134204.477848
+  },
+  "cost_effectiveness_portfolio": {
+    "annualized_cost_low": 20943478.180077784,
+    "annualized_cost_mid": 77578006.36910403,
+    "annualized_cost_high": 383354928.4016556,
+    "net_benefit_low": 10936477919.915405,
+    "net_benefit_mid": 18062476590.61078,
+    "net_benefit_high": 19989641501.92159,
+    "benefit_cost_ratio_low": 523.190145585206,
+    "benefit_cost_ratio_mid": 233.82986294688126,
+    "benefit_cost_ratio_high": 53.143953347008164
+  },
+  "pareto_concentration": {
+    "base": {
+      "top_5pct_share": 0.658029824504688,
+      "top_10pct_share": 0.8350255736253631,
+      "top_20pct_share": 0.9546273084477445,
+      "top_50pct_share": 0.998586643386875
+    },
+    "cf_mid": {
+      "top_5pct_share": 0.7356545894933278,
+      "top_10pct_share": 0.8731472811497235,
+      "top_20pct_share": 0.963894020612106,
+      "top_50pct_share": 0.9968658135510771
+    }
+  },
+  "recommendation_counts": {
+    "targeted_monitoring": 517,
+    "vegetation_management": 267,
+    "covered_conductor": 121,
+    "fast_trip_and_hardening": 90,
+    "undergrounding": 5
+  },
+  "recommendation_eal_share_base": {
+    "covered_conductor": 0.2599789451433004,
+    "fast_trip_and_hardening": 0.00023813998640191878,
+    "targeted_monitoring": 0.012716387752224183,
+    "undergrounding": 0.14279621542998058,
+    "vegetation_management": 0.584270311688093
+  },
+  "recommendation_eal_share_mid": {
+    "covered_conductor": 0.07929065731468615,
+    "fast_trip_and_hardening": 0.00020117953401723525,
+    "targeted_monitoring": 0.03301843950137845,
+    "undergrounding": 0.0,
+    "vegetation_management": 0.8874897236499178
+  },
+  "plausibility_gate_summary": {
+    "n_clusters_gated": 595,
+    "pct_clusters_gated": 59.5,
+    "base_eal_ungated_usd": 123137414315.97928,
+    "base_eal_gated_usd": 27133074830.07292,
+    "eal_shift_usd": 96004339485.90634,
+    "eal_shift_pct_of_ungated": 0.7796520661019603,
+    "eal_shift_share_from_gated_clusters": 1.0000000000000002
+  },
+  "bootstrap_ci_95": {
+    "n_bootstrap": 1000,
+    "portfolio_base_eal_usd_ci95": [
+      21472383621.081413,
+      27133074830.07292,
+      33535908374.318207
+    ],
+    "portfolio_mid_avoided_eal_usd_ci95": [
+      13821799780.962662,
+      18140054596.979877,
+      22884801062.912106
+    ],
+    "portfolio_mid_bcr_ci95": [
+      184.85230949099298,
+      233.82986294688126,
+      289.2374197756332
+    ]
+  },
+  "prioritization_comparison_equal_budget_mid": {
+    "scenario": "mid",
+    "top_n_el_ranked": 25,
+    "el_ranked_budget_usd": 4856055.0000800025,
+    "el_ranked_n_selected": 25,
+    "score_ranked_n_selected_within_budget": 42,
+    "el_ranked_avoided_usd": 8764804899.521944,
+    "score_ranked_avoided_usd": 1802842012.3239605,
+    "el_ranked_bcr": 1804.922905399042,
+    "score_ranked_bcr": 371.70271019356807,
+    "bcr_ratio_el_ranked_vs_score_ranked": 4.855823904160154
+  },
+  "outputs": {
+    "severity_hurdle_by_cluster_csv": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/severity_hurdle_by_cluster.csv",
+    "severity_by_cluster_csv": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/severity_by_cluster.csv",
+    "frap_severity_lookup_csv": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/frap_severity_lookup.csv",
+    "frap_lookup_chart_png": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/frap_severity_lookup_chart.png",
+    "plot_status_quo_vs_cf": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/eal_status_quo_vs_counterfactual.png",
+    "validation_summary_csv": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/model_validation_and_scenario_summary.csv",
+    "recommendation_decision_trace_csv": "/Users/ankurbanerjee/Desktop/MTF/wildfire_grid_protection/outputs/recommendation_decision_trace_2024.csv"
+  }
+}
